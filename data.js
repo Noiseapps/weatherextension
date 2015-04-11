@@ -33,18 +33,30 @@
     x.send();
 };*/
 
-function getCurrentWeatherXHR(city, countryCode) {
-    var xhr = new XMLHttpRequest();
-    //xhr.onreadystatechange = handleStateChange; // Implemented elsewhere.
-    xhr.onreadystatechange = function() {
+function updateCurrentWeatherView(xhr) {
+    return function() {
         if (xhr.readyState == 4) {
-            // JSON.parse does not evaluate the attacker's scripts.
-            //var resp = XML.parse(xhr.responseText);
-            //console.log(resp);
             console.log(xhr.responseText);
+            $xml = $(xhr.responseXML);
+
+            $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
+            //$temp_cels = Math.round($temp_cels);
+
+            $humidity = $xml.find("humidity")
+            $humidity_val = $humidity.attr('value');
+            $humidity_unit = $humidity.attr('unit');
+
+            console.log("temperature: " + $temp_cels);
+            console.log("humidity: " + $humidity_val + $humidity_unit);
+
         }
     }
-    xhr.open("GET", 'http://api.openweathermap.org/data/2.5/weather?q='+ city + ',' + countryCode +'&mode=xml', true);
+}
+
+function getCurrentWeatherXHR(city, countryCode) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = updateCurrentWeatherView(xhr); // Implemented elsewhere.
+    xhr.open("GET", 'http://api.openweathermap.org/data/2.5/weather?q='+ city + ',' + countryCode +'&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc', true);
     xhr.send();
 }
 
