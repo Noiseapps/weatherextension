@@ -37,17 +37,46 @@ function updateCurrentWeatherView(xhr) {
     return function() {
         if (xhr.readyState == 4) {
             console.log(xhr.responseText);
+            //$('#response').html(xhr.responseText);
+
             $xml = $(xhr.responseXML);
 
-            $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
-            //$temp_cels = Math.round($temp_cels);
+            var values = new Array(2);
 
-            $humidity = $xml.find("humidity")
+            $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
+            values[0] = new Array(3);
+            values[0][0] = "Temperature";
+            values[0][1] = $temp_cels;
+            values[0][2] = "\xB0C"
+
+            $humidity = $xml.find("humidity");
             $humidity_val = $humidity.attr('value');
             $humidity_unit = $humidity.attr('unit');
+            values[1] = new Array(3);
+            values[1][0] = "Humidity";
+            values[1][1] = $humidity_val;
+            values[1][2] = $humidity_unit;
 
-            console.log("temperature: " + $temp_cels);
-            console.log("humidity: " + $humidity_val + $humidity_unit);
+            $pressure = $xml.find("pressure");
+            values[2] = new Array(3);
+            values[2][0] = "Pressure";
+            values[2][1] = $pressure.attr('value');
+            values[2][2] = $pressure.attr('unit');
+
+            $clouds = $xml.find("clouds");
+            values[3] = new Array(3);
+            values[3][0] = "Clouds";
+            values[3][1] = $clouds.attr('value');
+            values[3][2] = $clouds.attr('name');
+
+            var response = "";
+
+            for(var i=0; i<values.length; i++) {
+                response += values[i][0] + ": " + values[i][1] + " " + values[i][2] + "<br>";
+            }
+
+            console.log("text: " + response);
+            $('#response').html(response);
 
         }
     }
@@ -62,7 +91,9 @@ function getCurrentWeatherXHR(city, countryCode) {
 
 $(document).ready(function() {
     $('#btn_get_cur_weather').click(function(){
-        getCurrentWeatherXHR('Lodz','pl');
+        var city = $('#input_city_name').val();
+        var countryCode = $('#input_locale').val();
+        getCurrentWeatherXHR(city, countryCode);
     });
 
 });
