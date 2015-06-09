@@ -33,11 +33,15 @@
     x.send();
 };*/
 
+var XSD;
+
 function updateCurrentWeatherView(xhr) {
     return function() {
         if (xhr.readyState == 4) {
             console.log(xhr.responseText);
             //$('#response').html(xhr.responseText);
+            
+            validateXML(xhr.responseText, XSD);
 
             $xml = $(xhr.responseXML);
 
@@ -89,12 +93,50 @@ function getCurrentWeatherXHR(city, countryCode) {
     xhr.send();
 }
 
+function validateXML(xmlData, schemaData) {
+    //create an object
+    var Module = {
+        xml: xmlData,
+        schema: schemaData,
+        arguments: ["--noout", "--schema", schemaFileName, xmlFileName]
+    };
+
+    //and call function
+    var xmllint = validateXML(Module);
+    
+    alert(xmllint);
+}
+
+function getXSD(xhr) {
+    XSD = xhr.response;
+}
+
 $(document).ready(function() {
     $('#btn_get_cur_weather').click(function(){
         var city = $('#input_city_name').val();
         var countryCode = $('#input_locale').val();
         getCurrentWeatherXHR(city, countryCode);
     });
+
+    //var reader = new FileReader();
+    //reader.onload = function(event) {
+    //    var contents = event.target.result;
+    //    console.log("File contents: " + contents);
+    //};
+    //
+    //reader.onerror = function(event) {
+    //    console.error("File could not be read! Code " + event.target.error.code);
+    //};
+    //
+    //var file = new File([""], "current-weather.xsd");
+    //
+    //alert(reader.valueOf);
+
+    // FIXME nie dziala
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = getXSD; // Implemented elsewhere.
+    xhr.open("GET", '/current-weather.xsd', true);
+    xhr.send();
 
 });
 
