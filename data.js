@@ -118,6 +118,35 @@ $(document).ready(function() {
         getCurrentWeatherXHR(city, countryCode);
     });
 
+    $('#btn_settings').click(function(){
+        $('#content').fadeOut();
+        $('#settings').fadeIn();
+        chrome.storage.sync.get(function (items) {
+            $('#countrycode').val(items.country).focus();
+            $('#city').val(items.city).focus();
+        });
+    });
+
+    $('#save_settings').click(function () {
+        chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val()}, function () {
+            $('#content').fadeIn();
+            $('#settings').fadeOut();
+        });
+    });
+
+    $('#btn_refresh').click(function(){
+        chrome.storage.sync.get(function (items) {
+            console.log(items);
+            var city = items.city;
+            var countryCode = items.country;
+            if(city.length == 0 || countryCode.length == 0){
+                    $('#btn_settings').click();
+                } else {
+                    getCurrentWeatherXHR(city, countryCode);
+                }
+        });
+    });
+
     //var reader = new FileReader();
     //reader.onload = function(event) {
     //    var contents = event.target.result;

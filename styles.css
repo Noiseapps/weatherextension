@@ -1,0 +1,24 @@
+body {
+    width: 450px;
+    padding: 0;
+    margin: 0;
+}
+
+#title {
+    font-weight: 500;
+    font-size: 1.4em;
+    padding: 16px;
+}
+
+#subtitle {
+    font-weight: 300;
+    font-size: 1.4em;
+    padding: 13px;
+}
+
+.white {
+}
+
+#settings {
+    display: none;
+}

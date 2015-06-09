@@ -7,20 +7,8 @@
 <html>
   <head>
     <title>Getting Started Extension's Popup</title>
-    <style>
-      body {
-        font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
-        font-size: 100%;
-      }
-      #status {
-        /* avoid an excessively wide status text */
-        white-space: pre;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        max-width: 400px;
-      }
-    </style>
-
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="materialize/css/materialize.css">
     <!--
       - JavaScript and HTML must be in separate files: see our Content Security
       - Policy documentation[1] for details and explanation.
@@ -33,26 +21,68 @@
   <body>
     <!--<div id="status"></div>-->
     <!--<img id="image-result" hidden>-->
-
     <div>
-      <input id="input_city_name" type="text"/>
-      <label for="input_city_name">
-        <span>City name</span>
-      </label>
-      <input id="input_locale" type="text"/>
-      <label for="input_locale">
-        <span>Country code</span>
-      </label>
-      <button id="btn_get_cur_weather">Get XML</button>
-    </div>
-    <hr>
+      <div class="row cyan darken-2 white-text z-depth-2" id="title">
+        <div class="col s9">Your location is: Lodz</div>
+        <a id="btn_settings" class="waves-effect waves-yellow col s1 right white-text text-accent-2 large mdi-action-settings"></a>
+        <a id="btn_refresh" class="waves-effect waves-yellow col s1 offset-s1 right white-text text-accent-2 large mdi-navigation-refresh"></a>
+      </div>
 
-    <div id="response">
+      <div class="container" id="content">
+        <div class="row">
+            <div class="col s4 offset-s4" id="weather_img"></div>
+        </div>
+      </div>
+
+      <div class="container" id="settings">
+        <div class="row">
+          <div class="input-field col s10 offset-s1">
+            <label for="city">
+              City:
+            </label>
+            <input type="text" name="city" id="city" class="validate">
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s10 offset-s1">
+            <label for="countrycode">
+              Country code:
+            </label>
+            <input type="text" name="countrycode" id="countrycode" class="validate">
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn waves-effect waves-light right" id="save_settings" type="submit" name="action">Save
+            <i class="mdi-content-save right"></i>
+          </button>
+        </div>
+      </div>
+
     </div>
+
+
+
+
+    <!--<div>-->
+      <!--<input id="input_city_name" type="text"/>-->
+      <!--<label for="input_city_name">-->
+        <!--<span>City name</span>-->
+      <!--</label>-->
+      <!--<input id="input_locale" type="text"/>-->
+      <!--<label for="input_locale">-->
+        <!--<span>Country code</span>-->
+      <!--</label>-->
+      <!--<button id="btn_get_cur_weather">Get XML</button>-->
+    <!--</div>-->
+    <!--<hr>-->
+
+    <!--<div id="response">-->
+    <!--</div>-->
 
 
 
     <script src="data.js"></script>
+    <script src="materialize/js/materialize.min.js"></script>
     <script src="xmllint.js"></script>
   </body>
 </html>
