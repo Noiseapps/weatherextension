@@ -47,6 +47,12 @@ function updateCurrentWeatherView(xhr) {
 
             var values = new Array(2);
 
+            var icon = $xml.find("weather").attr("icon");
+            $('#weather_icon').attr('src', 'http://openweathermap.org/img/w/' + icon + '.png');
+
+            var condition = $xml.find('weather').attr('value');
+            $('#condition').text(condition);
+
             $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
             values[0] = new Array(3);
             values[0][0] = "Temperature";
@@ -111,7 +117,25 @@ function getXSD(xhr) {
     XSD = xhr.response;
 }
 
+function init(){
+    console.log("init");
+
+    chrome.storage.sync.get(function (items) {
+        console.log(items);
+        var city = items.city;
+        var countryCode = items.country;
+        if(city.length == 0 || countryCode.length == 0){
+            $('#btn_settings').click();
+        } else {
+            $('#cityname').text(city + ", " + countryCode.toUpperCase());
+            getCurrentWeatherXHR(city, countryCode);
+        }
+    });
+}
+
 $(document).ready(function() {
+    init();
+
     $('#btn_get_cur_weather').click(function(){
         var city = $('#input_city_name').val();
         var countryCode = $('#input_locale').val();
