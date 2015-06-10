@@ -124,7 +124,7 @@ function init(){
         console.log(items);
         var city = items.city;
         var countryCode = items.country;
-        if(city.length == 0 || countryCode.length == 0){
+        if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
             $('#btn_settings').click();
         } else {
             $('#cityname').text(city + ", " + countryCode.toUpperCase());
@@ -163,7 +163,7 @@ $(document).ready(function() {
             console.log(items);
             var city = items.city;
             var countryCode = items.country;
-            if(city.length == 0 || countryCode.length == 0){
+            if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
                     $('#btn_settings').click();
                 } else {
                     getCurrentWeatherXHR(city, countryCode);
