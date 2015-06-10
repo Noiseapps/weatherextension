@@ -155,6 +155,7 @@ $(document).ready(function() {
         chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val()}, function () {
             $('#content').fadeIn();
             $('#settings').fadeOut();
+            $('#btn_refresh').click();
         });
     });
 
@@ -166,6 +167,7 @@ $(document).ready(function() {
             if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
                     $('#btn_settings').click();
                 } else {
+            		$('#cityname').text(city + ", " + countryCode.toUpperCase());
                     getCurrentWeatherXHR(city, countryCode);
                 }
         });
