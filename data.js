@@ -13,7 +13,8 @@ function validate(xmlData, schemaData) {
         arguments: ["--noout", "--schema", "file.xsd", "file.xml"]
     };
     var result = validateXML(Module);
-    //console.log(result);
+    console.log("xsd val result: " + result);
+
     return result;
 }
 
@@ -24,13 +25,13 @@ function updateForecastWeatherView(xhr) {
                 showError();
                 return;
             }
-            ////console.log("forecast: ");
-            ////console.log("validating forecast");
-            ////console.log(xsdForecastWeather);
-            //xhr.responseText += "asf";
+
+            console.log("validating forecast");
             console.log(xhr.responseText);
             var valid = validate(xhr.responseText, xsdForecastWeather);
-            if(!valid){
+            valid = valid.replace(/(\r\n|\n|\r)/gm,"");
+
+            if(valid !== "file.xml validates") {
                 showError();
                 return;
             }
@@ -75,22 +76,23 @@ function updateCurrentWeatherView(xhr) {
                 return;
             }
 
-            validate(xhr.responseText, xsdCurrentWeather);
-            var valid = validate(xhr.responseText, xsdForecastWeather);
-            if(!valid){
+            console.log("validating current weather");
+            var valid = validate(xhr.responseText, xsdCurrentWeather);
+            valid = valid.replace(/(\r\n|\n|\r)/gm,"");
+
+            if(valid !== "file.xml validates") {
                 showError();
                 return;
             }
             showSuccess();
             var xml = $(xhr.responseXML);
 
-            //console.log(xsltCurrentWeather);
             var domParser = new DOMParser();
             var xsltProcessor = new XSLTProcessor();
 
             xsltProcessor.importStylesheet(domParser.parseFromString(xsltCurrentWeather, "text/xml"));
             var resultDocument = xsltProcessor.transformToFragment(domParser.parseFromString(xhr.responseText, "text/xml"), document);
-            //console.log(resultDocument);
+
             $('#spinner').hide();
             $("#weather").html(resultDocument);
 
@@ -103,7 +105,7 @@ function updateCurrentWeatherView(xhr) {
 function getCurrentWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateCurrentWeatherView(xhr);
-    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city + ',' + countryCode + '&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc';
+    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city /*+ ',' + countryCode*/ + '&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc';
     console.log(url);
     xhr.open("GET", url, true);
     xhr.send();
@@ -119,10 +121,7 @@ function getForecastWeatherXHR(city, countryCode) {
 }
 
 function init(){
-    //console.log("init");
-
     chrome.storage.sync.get(function (items) {
-        //console.log(items);
         var city = items.city;
         var countryCode = items.country;
         if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
@@ -137,11 +136,9 @@ function init(){
 
 function getCurrentXsl(xhrXSLT) {
     xsltCurrentWeather = xhrXSLT.response;
-    //console.log(xsltCurrentWeather)
 }
 function getForecastXsl(xhrXSLT) {
     xsltForecastWeather = xhrXSLT.response;
-    //console.log(xsltForecastWeather )
 }
 
 $(document).ready(function() {
@@ -198,14 +195,14 @@ $(document).ready(function() {
     var xhr_current_xsl = new XMLHttpRequest();
     xhr_current_xsl.onload = function() {
         getCurrentXsl(xhr_current_xsl);
-    }; // Implemented elsewhere.
+    };
     xhr_current_xsl.open("GET", "/current_weather.xsl", true);
     xhr_current_xsl.send();
 
     var xhr_forecast_xsl = new XMLHttpRequest();
     xhr_forecast_xsl.onload = function() {
         getForecastXsl(xhr_forecast_xsl);
-    }; // Implemented elsewhere.
+    };
     xhr_forecast_xsl.open("GET", "/forecast.xsl", true);
     xhr_forecast_xsl.send();
 
