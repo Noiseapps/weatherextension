@@ -1,47 +1,40 @@
 /**
  * Created by szymon on 11.04.15.
  */
+var xsdCurrentWeather;
+var xsdForecastWeather;
 
-/*function getCurrentWeatherXML(city, countryCode, callback, errorCallback) {
-    var apiUrl = 'api.openweathermap.org/data/2.5/weather?q='+ city + ',' + countryCode +'&mode=xml';
-    var x = new XMLHttpRequest();
-    x.open('GET', apiUrl);
-    // The Google image search API responds with JSON, so let Chrome parse it.
-    x.responseType = 'xml';
-    //x.onload = function() {
-        // Parse and process the response from Google Image Search.
-        //var response = x.response;
-        //if (!response || !response.responseData || !response.responseData.results ||
-        //    response.responseData.results.length === 0) {
-        //    errorCallback('No response from Google Image search!');
-        //    return;
-        //}
-        //var firstResult = response.responseData.results[0];
-        // Take the thumbnail instead of the full image to get an approximately
-        // consistent image size.
-        //var imageUrl = firstResult.tbUrl;
-        //var width = parseInt(firstResult.tbWidth);
-        //var height = parseInt(firstResult.tbHeight);
-        //console.assert(
-        //    typeof imageUrl == 'string' && !isNaN(width) && !isNaN(height),
-        //    'Unexpected respose from the Google Image Search API!');
-        //callback(imageUrl, width, height);
-    //};
-    //x.onerror = function() {
-    //    errorCallback('Network error.');
-    //};
-    x.send();
-};*/
+function validate(xmlData, schemaData) {
+    var Module = {
+        xml: xmlData,
+        schema: schemaData,
+        arguments: ["--noout", "--schema", "file.xsd", "file.xml"]
+    };
 
-var XSD;
+    var result = validateXML(Module);
+    console.log("xsd val result: " + result);
+}
+
+function updateForecastWeatherView(xhr) {
+    return function() {
+        if(xhr.readyState == 4) {
+            //console.log("forecast: ");
+            console.log("validating forecast");
+            console.log(xhr.responseText);
+            console.log(xsdForecastWeather);
+            validate(xhr.responseText, xsdForecastWeather);
+        }
+    }
+}
 
 function updateCurrentWeatherView(xhr) {
     return function() {
         if (xhr.readyState == 4) {
             console.log(xhr.responseText);
             //$('#response').html(xhr.responseText);
-            
-            validateXML(xhr.responseText, XSD);
+
+            validate(xhr.responseText, xsdCurrentWeather);
+
 
             $xml = $(xhr.responseXML);
 
@@ -53,7 +46,7 @@ function updateCurrentWeatherView(xhr) {
             var condition = $xml.find('weather').attr('value');
             $('#condition').text(condition);
 
-            $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
+            /*$temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
             values[0] = new Array(3);
             values[0][0] = "Temperature";
             values[0][1] = $temp_cels;
@@ -85,8 +78,8 @@ function updateCurrentWeatherView(xhr) {
                 response += values[i][0] + ": " + values[i][1] + " " + values[i][2] + "<br>";
             }
 
-            console.log("text: " + response);
-            $('#response').html(response);
+            //console.log("text: " + response);
+            $('#response').html(response);*/
 
         }
     }
@@ -94,27 +87,16 @@ function updateCurrentWeatherView(xhr) {
 
 function getCurrentWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = updateCurrentWeatherView(xhr); // Implemented elsewhere.
+    xhr.onreadystatechange = updateCurrentWeatherView(xhr);
     xhr.open("GET", 'http://api.openweathermap.org/data/2.5/weather?q='+ city + ',' + countryCode +'&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc', true);
     xhr.send();
 }
 
-function validateXML(xmlData, schemaData) {
-    //create an object
-    var Module = {
-        xml: xmlData,
-        schema: schemaData,
-        arguments: ["--noout", "--schema", schemaFileName, xmlFileName]
-    };
-
-    //and call function
-    var xmllint = validateXML(Module);
-    
-    alert(xmllint);
-}
-
-function getXSD(xhr) {
-    XSD = xhr.response;
+function getForecastWeatherXHR(city, countryCode) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = updateForecastWeatherView(xhr);
+    xhr.open("GET", 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+ city + ',' + countryCode +'&mode=xml&units=metric&cnt=7&APPID=23a8348bb03a1f28429fc59725f336cc', true);
+    xhr.send();
 }
 
 function init(){
@@ -129,6 +111,7 @@ function init(){
         } else {
             $('#cityname').text(city + ", " + countryCode.toUpperCase());
             getCurrentWeatherXHR(city, countryCode);
+            getForecastWeatherXHR(city, countryCode);
         }
     });
 }
@@ -140,6 +123,7 @@ $(document).ready(function() {
         var city = $('#input_city_name').val();
         var countryCode = $('#input_locale').val();
         getCurrentWeatherXHR(city, countryCode);
+        getForecastWeatherXHR(city, countryCode);
     });
 
     $('#btn_settings').click(function(){
@@ -169,29 +153,22 @@ $(document).ready(function() {
                 } else {
             		$('#cityname').text(city + ", " + countryCode.toUpperCase());
                     getCurrentWeatherXHR(city, countryCode);
+                    getForecastWeatherXHR(city, countryCode);
                 }
         });
     });
 
-    //var reader = new FileReader();
-    //reader.onload = function(event) {
-    //    var contents = event.target.result;
-    //    console.log("File contents: " + contents);
-    //};
-    //
-    //reader.onerror = function(event) {
-    //    console.error("File could not be read! Code " + event.target.error.code);
-    //};
-    //
-    //var file = new File([""], "current-weather.xsd");
-    //
-    //alert(reader.valueOf);
+    // Get current weather XSD
+    var xhr_current = new XMLHttpRequest();
+    xhr_current.onload = function() { xsdCurrentWeather = xhr_current.response; };
+    xhr_current.open("GET", '/current-weather.xsd', true);
+    xhr_current.send();
 
-    // FIXME nie dziala
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = getXSD; // Implemented elsewhere.
-    xhr.open("GET", '/current-weather.xsd', true);
-    xhr.send();
+    // Get forecast XSD
+    var xhr_forecast = new XMLHttpRequest();
+    xhr_forecast.onload = function() { xsdForecastWeather = xhr_forecast.response; };
+    xhr_forecast.open("GET", '/forecast-weather.xsd', true);
+    xhr_forecast.send();
 
 });
 
