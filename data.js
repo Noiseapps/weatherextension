@@ -7,24 +7,35 @@ var xsltCurrentWeather;
 var xsltForecastWeather;
 
 function validate(xmlData, schemaData) {
-
     var Module = {
         xml: xmlData,
         schema: schemaData,
         arguments: ["--noout", "--schema", "file.xsd", "file.xml"]
     };
     var result = validateXML(Module);
-    //console.log("xsd val result: " + result);
+    console.log("xsd val result: " + result);
+
+    return result;
 }
 
 function updateForecastWeatherView(xhr) {
     return function() {
-        if(xhr.readyState == 4) {
-            ////console.log("forecast: ");
-            ////console.log("validating forecast");
-            ////console.log(xsdForecastWeather);
-            validate(xhr.responseText, xsdForecastWeather);
+        if(xhr.readyState == 4 ) {
+            if(xhr.status != 200){
+                showError();
+                return;
+            }
 
+            console.log("validating forecast");
+            console.log(xhr.responseText);
+            var valid = validate(xhr.responseText, xsdForecastWeather);
+            valid = valid.replace(/(\r\n|\n|\r)/gm,"");
+
+            if(valid !== "file.xml validates") {
+                showError();
+                return;
+            }
+            showSuccess();
             console.log(xhr.responseText);
             console.log(xsltForecastWeather);
             var domParser = new DOMParser();
@@ -43,30 +54,49 @@ function updateForecastWeatherView(xhr) {
                 var iconSrc = 'http://openweathermap.org/img/w/' + icon + '.png';
                 $('#forecast'+i).attr('src', iconSrc);
             }
-
         }
     }
 }
 
+function showError() {
+    $('#content').hide();
+    $('#error').show();
+}
+
+function showSuccess() {
+    $('#content').show();
+    $('#error').hide();
+}
+
 function updateCurrentWeatherView(xhr) {
     return function() {
-        if (xhr.readyState == 4) {
-            //console.log(xhr.responseText);
+        if (xhr.readyState == 4){
+            if(xhr.status != 200){
+                showError();
+                return;
+            }
 
-            validate(xhr.responseText, xsdCurrentWeather);
-            $xml = $(xhr.responseXML);
+            console.log("validating current weather");
+            var valid = validate(xhr.responseText, xsdCurrentWeather);
+            valid = valid.replace(/(\r\n|\n|\r)/gm,"");
 
-            //console.log(xsltCurrentWeather);
+            if(valid !== "file.xml validates") {
+                showError();
+                return;
+            }
+            showSuccess();
+            var xml = $(xhr.responseXML);
+
             var domParser = new DOMParser();
             var xsltProcessor = new XSLTProcessor();
 
             xsltProcessor.importStylesheet(domParser.parseFromString(xsltCurrentWeather, "text/xml"));
             var resultDocument = xsltProcessor.transformToFragment(domParser.parseFromString(xhr.responseText, "text/xml"), document);
-            //console.log(resultDocument);
+
             $('#spinner').hide();
             $("#weather").html(resultDocument);
 
-            var icon = $xml.find("weather").attr("icon");
+            var icon = xml.find("weather").attr("icon");
             $('#weather_icon').attr('src', 'http://openweathermap.org/img/w/' + icon + '.png');
         }
     }
@@ -75,7 +105,7 @@ function updateCurrentWeatherView(xhr) {
 function getCurrentWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateCurrentWeatherView(xhr);
-    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city + ',' + countryCode + '&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc';
+    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city /*+ ',' + countryCode*/ + '&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc';
     console.log(url);
     xhr.open("GET", url, true);
     xhr.send();
@@ -84,17 +114,14 @@ function getCurrentWeatherXHR(city, countryCode) {
 function getForecastWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateForecastWeatherView(xhr);
-    var url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q=' + city + ',' + countryCode + '&mode=xml&units=metric&cnt=6&APPID=23a8348bb03a1f28429fc59725f336cc';
+    var url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q=' + city +'&mode=xml&units=metric&cnt=6&APPID=23a8348bb03a1f28429fc59725f336cc';
     console.log(url);
     xhr.open("GET", url, true);
     xhr.send();
 }
 
 function init(){
-    //console.log("init");
-
     chrome.storage.sync.get(function (items) {
-        //console.log(items);
         var city = items.city;
         var countryCode = items.country;
         if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
@@ -109,16 +136,15 @@ function init(){
 
 function getCurrentXsl(xhrXSLT) {
     xsltCurrentWeather = xhrXSLT.response;
-    //console.log(xsltCurrentWeather)
 }
 function getForecastXsl(xhrXSLT) {
     xsltForecastWeather = xhrXSLT.response;
-    //console.log(xsltForecastWeather )
 }
 
 $(document).ready(function() {
     init();
     $('#btn_settings').click(function(){
+        $('#error').hide();
         $('#content').fadeOut(function(){
             $('#settings').fadeIn(function(){
                 chrome.storage.sync.get(function (items) {
@@ -130,7 +156,7 @@ $(document).ready(function() {
     });
 
     $('#save_settings').click(function () {
-        chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val()}, function () {
+        chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val().toUpperCase()}, function () {
             $('#content').fadeIn(function() {
                 $('#settings').fadeOut(function() {
                     $('#btn_refresh').click();
@@ -169,14 +195,14 @@ $(document).ready(function() {
     var xhr_current_xsl = new XMLHttpRequest();
     xhr_current_xsl.onload = function() {
         getCurrentXsl(xhr_current_xsl);
-    }; // Implemented elsewhere.
+    };
     xhr_current_xsl.open("GET", "/current_weather.xsl", true);
     xhr_current_xsl.send();
 
     var xhr_forecast_xsl = new XMLHttpRequest();
     xhr_forecast_xsl.onload = function() {
         getForecastXsl(xhr_forecast_xsl);
-    }; // Implemented elsewhere.
+    };
     xhr_forecast_xsl.open("GET", "/forecast.xsl", true);
     xhr_forecast_xsl.send();
 
