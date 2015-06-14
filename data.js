@@ -34,6 +34,7 @@
 };*/
 
 var XSD;
+var XSLT;
 
 function updateCurrentWeatherView(xhr) {
     return function() {
@@ -45,48 +46,54 @@ function updateCurrentWeatherView(xhr) {
 
             $xml = $(xhr.responseXML);
 
-            var values = new Array(2);
+            console.log(XSLT);
+            var domParser = new DOMParser();
+            var xsltProcessor = new XSLTProcessor();
+            xsltProcessor.importStylesheet(domParser.parseFromString(XSLT, "text/xml"));
+            var resultDocument = xsltProcessor.transformToFragment(domParser.parseFromString(xhr.responseText, "text/xml"), document);
+            console.log(resultDocument);
+            $("#weather").html(resultDocument);
 
             var icon = $xml.find("weather").attr("icon");
             $('#weather_icon').attr('src', 'http://openweathermap.org/img/w/' + icon + '.png');
 
-            var condition = $xml.find('weather').attr('value');
-            $('#condition').text(condition);
+            //$temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
+            //values[0] = new Array(3);
+            //values[0][0] = "Temperature";
+            //values[0][1] = $temp_cels;
+            //values[0][2] = "\xB0C"
+            //
+            //$humidity = $xml.find("humidity");
+            //$humidity_val = $humidity.attr('value');
+            //$humidity_unit = $humidity.attr('unit');
+            //values[1] = new Array(3);
+            //values[1][0] = "Humidity";
+            //values[1][1] = $humidity_val;
+            //values[1][2] = $humidity_unit;
+            //
+            //$pressure = $xml.find("pressure");
+            //values[2] = new Array(3);
+            //values[2][0] = "Pressure";
+            //values[2][1] = $pressure.attr('value');
+            //values[2][2] = $pressure.attr('unit');
+            //
+            //$clouds = $xml.find("clouds");
+            //values[3] = new Array(3);
+            //values[3][0] = "Clouds";
+            //values[3][1] = $clouds.attr('value');
+            //values[3][2] = $clouds.attr('name');
+            //
+            //var response = "";
+            //
+            //for(var i=0; i<values.length; i++) {
+            //    response += values[i][0] + ": " + values[i][1] + " " + values[i][2] + "<br>";
+            //}
+            //
+            //console.log("text: " + response);
+            //$('#response').html(response);
 
-            $temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
-            values[0] = new Array(3);
-            values[0][0] = "Temperature";
-            values[0][1] = $temp_cels;
-            values[0][2] = "\xB0C"
 
-            $humidity = $xml.find("humidity");
-            $humidity_val = $humidity.attr('value');
-            $humidity_unit = $humidity.attr('unit');
-            values[1] = new Array(3);
-            values[1][0] = "Humidity";
-            values[1][1] = $humidity_val;
-            values[1][2] = $humidity_unit;
 
-            $pressure = $xml.find("pressure");
-            values[2] = new Array(3);
-            values[2][0] = "Pressure";
-            values[2][1] = $pressure.attr('value');
-            values[2][2] = $pressure.attr('unit');
-
-            $clouds = $xml.find("clouds");
-            values[3] = new Array(3);
-            values[3][0] = "Clouds";
-            values[3][1] = $clouds.attr('value');
-            values[3][2] = $clouds.attr('name');
-
-            var response = "";
-
-            for(var i=0; i<values.length; i++) {
-                response += values[i][0] + ": " + values[i][1] + " " + values[i][2] + "<br>";
-            }
-
-            console.log("text: " + response);
-            $('#response').html(response);
 
         }
     }
@@ -133,6 +140,10 @@ function init(){
     });
 }
 
+function getXSLT(xhrXSLT) {
+    XSLT = xhrXSLT.response;
+    console.log(XSLT)
+}
 $(document).ready(function() {
     init();
 
@@ -192,6 +203,13 @@ $(document).ready(function() {
     xhr.onreadystatechange = getXSD; // Implemented elsewhere.
     xhr.open("GET", '/current-weather.xsd', true);
     xhr.send();
+
+    var xhrXSLT = new XMLHttpRequest();
+    xhrXSLT.onload = function() {
+        getXSLT(xhrXSLT);
+    }; // Implemented elsewhere.
+    xhrXSLT.open("GET", "/current_weather.xsl", true);
+    xhrXSLT.send();
 
 });
 
