@@ -1,28 +1,49 @@
 /**
  * Created by szymon on 11.04.15.
  */
-var xsdCurrentWeather;
 var xsdForecastWeather;
+var xsdCurrentWeather;
+var xsltCurrentWeather;
+var xsltForecastWeather;
 
 function validate(xmlData, schemaData) {
+
     var Module = {
         xml: xmlData,
         schema: schemaData,
         arguments: ["--noout", "--schema", "file.xsd", "file.xml"]
     };
-
     var result = validateXML(Module);
-    console.log("xsd val result: " + result);
+    //console.log("xsd val result: " + result);
 }
 
 function updateForecastWeatherView(xhr) {
     return function() {
         if(xhr.readyState == 4) {
-            //console.log("forecast: ");
-            console.log("validating forecast");
-            console.log(xhr.responseText);
-            console.log(xsdForecastWeather);
+            ////console.log("forecast: ");
+            ////console.log("validating forecast");
+            ////console.log(xsdForecastWeather);
             validate(xhr.responseText, xsdForecastWeather);
+
+            console.log(xhr.responseText);
+            console.log(xsltForecastWeather);
+            var domParser = new DOMParser();
+            var xsltProcessor = new XSLTProcessor();
+
+            xsltProcessor.importStylesheet(domParser.parseFromString(xsltForecastWeather, "text/xml"));
+            var forecastDocument = xsltProcessor.transformToFragment(domParser.parseFromString(xhr.responseText, "text/xml"), document);
+            console.log(forecastDocument);
+            $("#forecast").html(forecastDocument);
+            var xml = $(xhr.responseXML);
+            var count = xml.find('forecast').find('time').length;
+            for(var i=1;i<=count;i++){
+                var element = xml.find('forecast').children().eq(i-1);
+                console.log(element);
+                var icon = element.find('symbol').attr('var');
+                var iconSrc = 'http://openweathermap.org/img/w/' + icon + '.png';
+                $('#forecast'+i).attr('src', iconSrc);
+            }
+
         }
     }
 }
@@ -30,57 +51,23 @@ function updateForecastWeatherView(xhr) {
 function updateCurrentWeatherView(xhr) {
     return function() {
         if (xhr.readyState == 4) {
-            console.log(xhr.responseText);
-            //$('#response').html(xhr.responseText);
+            //console.log(xhr.responseText);
 
             validate(xhr.responseText, xsdCurrentWeather);
-
-
             $xml = $(xhr.responseXML);
 
-            var values = new Array(2);
+            //console.log(xsltCurrentWeather);
+            var domParser = new DOMParser();
+            var xsltProcessor = new XSLTProcessor();
+
+            xsltProcessor.importStylesheet(domParser.parseFromString(xsltCurrentWeather, "text/xml"));
+            var resultDocument = xsltProcessor.transformToFragment(domParser.parseFromString(xhr.responseText, "text/xml"), document);
+            //console.log(resultDocument);
+            $('#spinner').hide();
+            $("#weather").html(resultDocument);
 
             var icon = $xml.find("weather").attr("icon");
             $('#weather_icon').attr('src', 'http://openweathermap.org/img/w/' + icon + '.png');
-
-            var condition = $xml.find('weather').attr('value');
-            $('#condition').text(condition);
-
-            /*$temp_cels = Math.round($xml.find("temperature").attr('value')- 273.15);
-            values[0] = new Array(3);
-            values[0][0] = "Temperature";
-            values[0][1] = $temp_cels;
-            values[0][2] = "\xB0C"
-
-            $humidity = $xml.find("humidity");
-            $humidity_val = $humidity.attr('value');
-            $humidity_unit = $humidity.attr('unit');
-            values[1] = new Array(3);
-            values[1][0] = "Humidity";
-            values[1][1] = $humidity_val;
-            values[1][2] = $humidity_unit;
-
-            $pressure = $xml.find("pressure");
-            values[2] = new Array(3);
-            values[2][0] = "Pressure";
-            values[2][1] = $pressure.attr('value');
-            values[2][2] = $pressure.attr('unit');
-
-            $clouds = $xml.find("clouds");
-            values[3] = new Array(3);
-            values[3][0] = "Clouds";
-            values[3][1] = $clouds.attr('value');
-            values[3][2] = $clouds.attr('name');
-
-            var response = "";
-
-            for(var i=0; i<values.length; i++) {
-                response += values[i][0] + ": " + values[i][1] + " " + values[i][2] + "<br>";
-            }
-
-            //console.log("text: " + response);
-            $('#response').html(response);*/
-
         }
     }
 }
@@ -88,22 +75,26 @@ function updateCurrentWeatherView(xhr) {
 function getCurrentWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateCurrentWeatherView(xhr);
-    xhr.open("GET", 'http://api.openweathermap.org/data/2.5/weather?q='+ city + ',' + countryCode +'&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc', true);
+    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city + ',' + countryCode + '&mode=xml&APPID=23a8348bb03a1f28429fc59725f336cc';
+    console.log(url);
+    xhr.open("GET", url, true);
     xhr.send();
 }
 
 function getForecastWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateForecastWeatherView(xhr);
-    xhr.open("GET", 'http://api.openweathermap.org/data/2.5/forecast/daily?q='+ city + ',' + countryCode +'&mode=xml&units=metric&cnt=7&APPID=23a8348bb03a1f28429fc59725f336cc', true);
+    var url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q=' + city + ',' + countryCode + '&mode=xml&units=metric&cnt=6&APPID=23a8348bb03a1f28429fc59725f336cc';
+    console.log(url);
+    xhr.open("GET", url, true);
     xhr.send();
 }
 
 function init(){
-    console.log("init");
+    //console.log("init");
 
     chrome.storage.sync.get(function (items) {
-        console.log(items);
+        //console.log(items);
         var city = items.city;
         var countryCode = items.country;
         if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
@@ -116,36 +107,41 @@ function init(){
     });
 }
 
+function getCurrentXsl(xhrXSLT) {
+    xsltCurrentWeather = xhrXSLT.response;
+    //console.log(xsltCurrentWeather)
+}
+function getForecastXsl(xhrXSLT) {
+    xsltForecastWeather = xhrXSLT.response;
+    //console.log(xsltForecastWeather )
+}
+
 $(document).ready(function() {
     init();
-
-    $('#btn_get_cur_weather').click(function(){
-        var city = $('#input_city_name').val();
-        var countryCode = $('#input_locale').val();
-        getCurrentWeatherXHR(city, countryCode);
-        getForecastWeatherXHR(city, countryCode);
-    });
-
     $('#btn_settings').click(function(){
-        $('#content').fadeOut();
-        $('#settings').fadeIn();
-        chrome.storage.sync.get(function (items) {
-            $('#countrycode').val(items.country).focus();
-            $('#city').val(items.city).focus();
+        $('#content').fadeOut(function(){
+            $('#settings').fadeIn(function(){
+                chrome.storage.sync.get(function (items) {
+                    $('#countrycode').val(items.country).focus();
+                    $('#city').val(items.city).focus();
+                });
+            });
         });
     });
 
     $('#save_settings').click(function () {
         chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val()}, function () {
-            $('#content').fadeIn();
-            $('#settings').fadeOut();
-            $('#btn_refresh').click();
+            $('#content').fadeIn(function() {
+                $('#settings').fadeOut(function() {
+                    $('#btn_refresh').click();
+                });
+            });
         });
     });
 
     $('#btn_refresh').click(function(){
         chrome.storage.sync.get(function (items) {
-            console.log(items);
+            //console.log(items);
             var city = items.city;
             var countryCode = items.country;
             if(city === undefined || countryCode === undefined || city.length == 0 || countryCode.length == 0){
@@ -169,6 +165,20 @@ $(document).ready(function() {
     xhr_forecast.onload = function() { xsdForecastWeather = xhr_forecast.response; };
     xhr_forecast.open("GET", '/forecast-weather.xsd', true);
     xhr_forecast.send();
+    
+    var xhr_current_xsl = new XMLHttpRequest();
+    xhr_current_xsl.onload = function() {
+        getCurrentXsl(xhr_current_xsl);
+    }; // Implemented elsewhere.
+    xhr_current_xsl.open("GET", "/current_weather.xsl", true);
+    xhr_current_xsl.send();
+
+    var xhr_forecast_xsl = new XMLHttpRequest();
+    xhr_forecast_xsl.onload = function() {
+        getForecastXsl(xhr_forecast_xsl);
+    }; // Implemented elsewhere.
+    xhr_forecast_xsl.open("GET", "/forecast.xsl", true);
+    xhr_forecast_xsl.send();
 
 });
 
