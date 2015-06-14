@@ -36,7 +36,7 @@ function updateForecastWeatherView(xhr) {
                 return;
             }
             showSuccess();
-            console.log(xhr.responseText);
+
             console.log(xsltForecastWeather);
             var domParser = new DOMParser();
             var xsltProcessor = new XSLTProcessor();
@@ -77,6 +77,7 @@ function updateCurrentWeatherView(xhr) {
             }
 
             console.log("validating current weather");
+            console.log(xhr.responseText);
             var valid = validate(xhr.responseText, xsdCurrentWeather);
             valid = valid.replace(/(\r\n|\n|\r)/gm,"");
 
@@ -85,6 +86,7 @@ function updateCurrentWeatherView(xhr) {
                 return;
             }
             showSuccess();
+
             var xml = $(xhr.responseXML);
 
             var domParser = new DOMParser();
