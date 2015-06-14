@@ -7,24 +7,34 @@ var xsltCurrentWeather;
 var xsltForecastWeather;
 
 function validate(xmlData, schemaData) {
-
     var Module = {
         xml: xmlData,
         schema: schemaData,
         arguments: ["--noout", "--schema", "file.xsd", "file.xml"]
     };
     var result = validateXML(Module);
-    //console.log("xsd val result: " + result);
+    //console.log(result);
+    return result;
 }
 
 function updateForecastWeatherView(xhr) {
     return function() {
-        if(xhr.readyState == 4) {
+        if(xhr.readyState == 4 ) {
+            if(xhr.status != 200){
+                showError();
+                return;
+            }
             ////console.log("forecast: ");
             ////console.log("validating forecast");
             ////console.log(xsdForecastWeather);
-            validate(xhr.responseText, xsdForecastWeather);
-
+            //xhr.responseText += "asf";
+            console.log(xhr.responseText);
+            var valid = validate(xhr.responseText, xsdForecastWeather);
+            if(!valid){
+                showError();
+                return;
+            }
+            showSuccess();
             console.log(xhr.responseText);
             console.log(xsltForecastWeather);
             var domParser = new DOMParser();
@@ -43,18 +53,36 @@ function updateForecastWeatherView(xhr) {
                 var iconSrc = 'http://openweathermap.org/img/w/' + icon + '.png';
                 $('#forecast'+i).attr('src', iconSrc);
             }
-
         }
     }
 }
 
+function showError() {
+    $('#content').hide();
+    $('#error').show();
+}
+
+function showSuccess() {
+    $('#content').show();
+    $('#error').hide();
+}
+
 function updateCurrentWeatherView(xhr) {
     return function() {
-        if (xhr.readyState == 4) {
-            //console.log(xhr.responseText);
+        if (xhr.readyState == 4){
+            if(xhr.status != 200){
+                showError();
+                return;
+            }
 
             validate(xhr.responseText, xsdCurrentWeather);
-            $xml = $(xhr.responseXML);
+            var valid = validate(xhr.responseText, xsdForecastWeather);
+            if(!valid){
+                showError();
+                return;
+            }
+            showSuccess();
+            var xml = $(xhr.responseXML);
 
             //console.log(xsltCurrentWeather);
             var domParser = new DOMParser();
@@ -66,7 +94,7 @@ function updateCurrentWeatherView(xhr) {
             $('#spinner').hide();
             $("#weather").html(resultDocument);
 
-            var icon = $xml.find("weather").attr("icon");
+            var icon = xml.find("weather").attr("icon");
             $('#weather_icon').attr('src', 'http://openweathermap.org/img/w/' + icon + '.png');
         }
     }
@@ -84,7 +112,7 @@ function getCurrentWeatherXHR(city, countryCode) {
 function getForecastWeatherXHR(city, countryCode) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = updateForecastWeatherView(xhr);
-    var url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q=' + city + ',' + countryCode + '&mode=xml&units=metric&cnt=6&APPID=23a8348bb03a1f28429fc59725f336cc';
+    var url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q=' + city +'&mode=xml&units=metric&cnt=6&APPID=23a8348bb03a1f28429fc59725f336cc';
     console.log(url);
     xhr.open("GET", url, true);
     xhr.send();
@@ -119,6 +147,7 @@ function getForecastXsl(xhrXSLT) {
 $(document).ready(function() {
     init();
     $('#btn_settings').click(function(){
+        $('#error').hide();
         $('#content').fadeOut(function(){
             $('#settings').fadeIn(function(){
                 chrome.storage.sync.get(function (items) {
@@ -130,7 +159,7 @@ $(document).ready(function() {
     });
 
     $('#save_settings').click(function () {
-        chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val()}, function () {
+        chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val().toUpperCase()}, function () {
             $('#content').fadeIn(function() {
                 $('#settings').fadeOut(function() {
                     $('#btn_refresh').click();
