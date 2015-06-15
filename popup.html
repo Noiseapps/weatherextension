@@ -9,6 +9,7 @@
     <title>Getting Started Extension's Popup</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="materialize/css/materialize.css">
+    <meta charset="UTF-8">
     <!--
       - JavaScript and HTML must be in separate files: see our Content Security
       - Policy documentation[1] for details and explanation.
@@ -22,7 +23,8 @@
     <!--<img id="image-result" hidden>-->
     <div>
       <div class="row cyan darken-2 white-text z-depth-2" id="title">
-        <div class="col s9">Weather for: <span id="cityname"></span></div>
+        <div class="col s8">Weather for: <span id="cityname"></span></div>
+        <a id="btn_about" class="waves-effect waves-yellow col s1 right white-text text-accent-2 large mdi-action-info-outline"></a>
         <a id="btn_settings" class="waves-effect waves-yellow col s1 right white-text text-accent-2 large mdi-action-settings"></a>
         <a id="btn_refresh" class="waves-effect waves-yellow col s1 offset-s1 right white-text text-accent-2 large mdi-navigation-refresh"></a>
       </div>
@@ -77,29 +79,20 @@
         </div>
       </div>
 
+      <div class="container valign-wrapper" id="about">
+        <div class="col s10 offset-s1 valign center-align">
+          <h4>Chrome Weather Extension</h4>
+          © 2015 by: <br/>
+          <a id="mail_szymon" href="mailto:szym1000@gmail.com">Szymon Przedwojski</a><br/>
+          <a id="mail_tomasz" href="mailto:tomasz.scibiorek@gmail.com">Tomasz Ścibiorek</a><br/>
+          in the scope of a university project at <br />the Lodz University of Technology (Poland).<br/><br/>
+
+          <a id="github" href="https://github.com/Noiseapps/weatherextension">GitHub repository</a>
+
+        </div>
+      </div>
+
     </div>
-
-
-
-
-    <!--<div>-->
-      <!--<input id="input_city_name" type="text"/>-->
-      <!--<label for="input_city_name">-->
-        <!--<span>City name</span>-->
-      <!--</label>-->
-      <!--<input id="input_locale" type="text"/>-->
-      <!--<label for="input_locale">-->
-        <!--<span>Country code</span>-->
-      <!--</label>-->
-      <!--<button id="btn_get_cur_weather">Get XML</button>-->
-    <!--</div>-->
-    <!--<hr>-->
-
-    <!--<div id="response">-->
-    <!--</div>-->
-
-
-
     <script src="data.js"></script>
     <script src="materialize/js/materialize.min.js"></script>
     <script src="xmllint.js"></script>

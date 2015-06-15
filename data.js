@@ -143,26 +143,46 @@ function getForecastXsl(xhrXSLT) {
     xsltForecastWeather = xhrXSLT.response;
 }
 
+function hideAll() {
+    $('#error').hide();
+    $('#content').hide();
+    $('#settings').hide();
+    $('#about').hide();
+}
+
+function clicks() {
+    $('#mail_szymon, #mail_tomasz, #github').click(function() {
+        var location = $(this).attr('href');
+        chrome.tabs.create({active: true, url: location});
+    });
+}
 $(document).ready(function() {
     init();
     $('#btn_settings').click(function(){
-        $('#error').hide();
-        $('#content').fadeOut(function(){
-            $('#settings').fadeIn(function(){
-                chrome.storage.sync.get(function (items) {
-                    $('#countrycode').val(items.country).focus();
-                    $('#city').val(items.city).focus();
-                });
+        hideAll();
+        $('#settings').fadeIn(function(){
+            chrome.storage.sync.get(function (items) {
+                $('#countrycode').val(items.country).focus();
+                $('#city').val(items.city).focus();
+            });
+        });
+    });
+
+    $('#btn_about').click(function(){
+        hideAll();
+        $('#about').fadeIn(function(){
+            chrome.storage.sync.get(function (items) {
+                $('#countrycode').val(items.country).focus();
+                $('#city').val(items.city).focus();
             });
         });
     });
 
     $('#save_settings').click(function () {
+        hideAll();
         chrome.storage.sync.set({'city' : $('#city').val(), 'country' : $("#countrycode").val().toUpperCase()}, function () {
             $('#content').fadeIn(function() {
-                $('#settings').fadeOut(function() {
-                    $('#btn_refresh').click();
-                });
+                $('#btn_refresh').click();
             });
         });
     });
@@ -207,6 +227,8 @@ $(document).ready(function() {
     };
     xhr_forecast_xsl.open("GET", "/forecast.xsl", true);
     xhr_forecast_xsl.send();
+
+    clicks();
 
 });
 
