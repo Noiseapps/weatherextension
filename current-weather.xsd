@@ -100,7 +100,15 @@
                         </xs:simpleContent>
                     </xs:complexType>
                 </xs:element>
-                <xs:element type="xs:string" name="visibility"/>
+                <xs:element name="visibility">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute type="xs:short" name="value"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
                 <xs:element name="precipitation">
                     <xs:complexType>
                         <xs:simpleContent>
